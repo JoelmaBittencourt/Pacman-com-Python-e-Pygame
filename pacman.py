@@ -3,16 +3,18 @@ import pygame
 pygame.init()
 
 screen = pygame.display.set_mode((800, 600), 0)
+font = pygame.font.SysFont("arial", 20, True, False)
 
-AMARELO = (251, 164, 200)
+AMARELO = (244, 226, 246)
 PRETO = (0, 0, 0)
-AZUL = (250, 242, 221)
+AZUL = (245, 244, 235)
 VELOCIDADE = 1
 
 
 class Cenario:
-    def __init__(self, tamanho,pac):
-        self.pacman=pac
+    def __init__(self, tamanho, pac):
+        self.pacman = pac
+        self.pontos = 0
         self.tamanho = tamanho
         self.matriz = [
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -46,6 +48,11 @@ class Cenario:
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
         ]
 
+    def pintar_pontos(self, tela):
+        pontos_x = self.tamanho * 30
+        pontos_img = font.render("Sua pontuação: {}".format(self.pontos), True, AMARELO)
+        tela.blit(pontos_img, (pontos_x, 50))
+
     def pintar_linha(self, tela, numero_linha, linha):
         for numero_coluna, coluna in enumerate(linha):
             x = numero_coluna * self.tamanho
@@ -62,9 +69,19 @@ class Cenario:
     def pintar(self, tela):
         for numero_linha, linha in enumerate(self.matriz):
             self.pintar_linha(tela, numero_linha, linha)
+        self.pintar_pontos(tela)
 
-def calcular_regras(self):
-    col= self.pacman.coluna_intencao
+    def calcular_regras(self):
+        col = self.pacman.coluna_intencao
+        lin = self.pacman.linha_intencao
+        if 0 <= col < 28 and 0 <= lin < 29:
+            if self.matriz[lin][col] != 2:
+                self.pacman.aceitar_movimento()
+                if self.matriz[lin][col] == 1:
+                    self.pontos += 1
+                    self.matriz[lin][col] = 0
+                    print(self.pontos)
+
 
 
 class Pacman:
@@ -80,10 +97,9 @@ class Pacman:
         self.coluna_intencao = self.coluna
         self.linha_intencao = self.linha
 
-
     def calcular_regras(self):
-        self.coluna_intencao = self.coluna = self.coluna + self.vel_x
-        self.linha_intencao =  self.linha = self.linha + self.vel_y
+        self.coluna_intencao = self.coluna + self.vel_x
+        self.linha_intencao = self.linha + self.vel_y
         self.centro_x = int(self.coluna * self.tamanho + self.raio)
         self.centro_y = int(self.linha * self.tamanho + self.raio)
 
@@ -125,15 +141,20 @@ class Pacman:
                 elif e.key == pygame.K_DOWN:
                     self.vel_y = 0
 
+    def aceitar_movimento(self):
+        self.linha = self.linha_intencao
+        self.coluna = self.coluna_intencao
+
 
 if __name__ == "__main__":
     size = 600 // 30
     pacman = Pacman(size)
-    cenario = Cenario(size,pacman)
+    cenario = Cenario(size, pacman)
 
     while True:
         # Calcular as regras
         pacman.calcular_regras()
+        cenario.calcular_regras()
 
         # Pintar a tela
         screen.fill(PRETO)
